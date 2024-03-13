@@ -46,15 +46,17 @@ double performEntropy(const unsigned blockSize,
 
     double entropy    = 0;
     // Calculate entropy
-    //if (cpuSimd == CpuSimd::AVX2)
-    //{
-    //    entropy = entropy_avx2(block);
-    //}
-    //else
-    if (enableLowpass)
-        entropy = vca::entropy_lowpass_c(block, blockSize);
+    if (cpuSimd == CpuSimd::AVX2)
+    {
+        entropy = entropy_avx2(block);
+    }
     else
-        entropy = vca::entropy_c(block);
+    {
+        if (enableLowpass)
+            entropy = vca::entropy_lowpass_c(block, blockSize);
+        else
+            entropy = vca::entropy_c(block);
+    }
 
     return entropy;
 }

@@ -84,7 +84,7 @@ void printStatus(uint32_t frameNum, unsigned framesToBeAnalyzed, bool printSumma
                 int(elapsedAbsMs % 1000));
         return;
     }
-    else if (framesToBeAnalyzed > 0)
+    else if (framesToBeAnalyzed > 0 && frameNum > 0)
     {
         int eta = (int) (elapsedAbsMs * (framesToBeAnalyzed - frameNum)
                          / ((int64_t) frameNum * 1000));
@@ -200,7 +200,7 @@ std::optional<CLIOptions> parseCLIOptions(int argc, char **argv)
             options.vcaParam.enableSIMD = false;
             options.vcaParam.cpuSimd    = CpuSimd::None;
         }
-        else if (name == "no-energy-chroma")
+        else if (name == "no-dctenergy-chroma")
             options.vcaParam.enableEnergyChroma = false;
         else if (name == "no-entropy-chroma")
             options.vcaParam.enableEntropyChroma = false;
