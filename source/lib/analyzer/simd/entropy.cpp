@@ -19,13 +19,13 @@
  * along with this program.
  *****************************************************************************/
 
+#ifdef WIN32
 #include <immintrin.h> // Include SIMD intrinsics header for x86 architecture
 #include <cmath>
 #include <vector>
 #include <unordered_map>
 
-// x86 SIMD optimized entropy function
-
+// x86 AVX2 SIMD optimized entropy function
 double entropy_avx2(const std::vector<int16_t> &block)
 {
     std::unordered_map<int, int> pixelCounts;
@@ -51,3 +51,4 @@ double entropy_avx2(const std::vector<int16_t> &block)
 
     return entropyArr[0] + entropyArr[1] + entropyArr[2] + entropyArr[3];
 }
+#endif

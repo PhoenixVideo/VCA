@@ -65,16 +65,20 @@ double performEntropy(const unsigned blockSize,
                 downscaledBlock[(i / 2) * downscaledWidth + (j / 2)] = averagePixel;
             }
         }
+#ifdef WIN32
         if (cpuSimd == CpuSimd::AVX2)
             entropy = entropy_avx2(downscaledBlock);
         else
+#endif
             entropy = vca::entropy_c(downscaledBlock);
     }
     else 
     {
+#ifdef WIN32
         if (cpuSimd == CpuSimd::AVX2)
             entropy = entropy_avx2(block);
         else
+#endif
             entropy = vca::entropy_c(block);
     }
     return entropy;

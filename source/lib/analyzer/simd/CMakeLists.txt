@@ -50,7 +50,7 @@ if(BUILD_WITH_NASM)
 
     if(GCC)
         set_source_files_properties(dct-ssse3.cpp PROPERTIES COMPILE_FLAGS "-mssse3")
-		set_source_files_properties(entropy.cpp PROPERTIES COMPILE_FLAGS "-mssse3")
+		set_source_files_properties(entropy.cpp PROPERTIES COMPILE_FLAGS "-mavx2")
     endif(GCC)
 else()
     target_sources(vcaLibSimd8bit
