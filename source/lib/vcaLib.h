@@ -111,8 +111,12 @@ struct vca_frame_results
     double entropyU{};
     double entropyV{};
 
-    double epsilon{};
+    uint32_t *energyEpsilonPerBlock{};
+    double energyEpsilon{};
     double entropyEpsilon{};
+
+    double *edgeDensityPerBlock{};
+    double averageEdgeDensity{};
 
     int poc{};
     bool isNewShot{};
@@ -152,11 +156,13 @@ struct vca_frame
 struct vca_param
 {
     bool enableSIMD{true};
-    bool enableChroma{true};
+    bool enableEnergyChroma{true};
+    bool enableEntropyChroma{true};
     bool enableLowpass{true};
 
     bool enableDCTenergy{true};
     bool enableEntropy{true};
+    bool enableEdgeDensity{true};
 
     vca_frame_info frameInfo{};
 

@@ -43,9 +43,13 @@
 
 	Disable lowpass DCT analysis (which is enabled by default).
 
-- `--no-chroma`
+- `--no-energy-chroma`
 
-	Disable analysis of chroma planes (which is enabled by default).
+	Disable DCT energy analysis of chroma planes (which is enabled by default).
+
+- `--no-entropy-chroma`
+
+	Disable entropy analysis of chroma planes (which is enabled by default).
 	
 - `--no-simd`
 
@@ -58,7 +62,11 @@
 - `--no-entropy`
 
 	Disable analysis of entropy-based features (which is enabled by default).
-	
+
+- `--no-edgedensity`
+
+	Disable analysis of edge density (which is enabled by default).
+
 - `--threads <integer>`
 
 	Specify the number of threads to use. Default: 0 (autodetect).

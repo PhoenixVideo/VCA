@@ -121,11 +121,10 @@ vca_result Analyzer::pullResult(vca_frame_results *outputResult)
         if (this->cfg.enableDCTenergy)
         {
             computeTextureSAD(*result, *this->previousResult);
-            auto sadNormalized     = result->energyDiff / result->averageEnergy;
-            auto sadNormalizedPrev = this->previousResult->energyDiff
-                                     / this->previousResult->averageEnergy;
             if (this->previousResult->energyDiff > 0)
-                result->epsilon = abs(sadNormalizedPrev - sadNormalized) / sadNormalizedPrev;
+            {
+                computeTextureEpsilon(*result, *this->previousResult);
+            }
         }
         if (this->cfg.enableEntropy)
         {
@@ -145,7 +144,7 @@ vca_result Analyzer::pullResult(vca_frame_results *outputResult)
         outputResult->averageBrightness = result->averageBrightness;
         outputResult->averageEnergy     = result->averageEnergy;
         outputResult->energyDiff        = result->energyDiff;
-        outputResult->epsilon           = result->epsilon;
+        outputResult->energyEpsilon     = result->energyEpsilon;
 
         if (outputResult->brightnessPerBlock)
             std::memcpy(outputResult->brightnessPerBlock,
@@ -159,7 +158,7 @@ vca_result Analyzer::pullResult(vca_frame_results *outputResult)
             std::memcpy(outputResult->energyDiffPerBlock,
                         result->energyDiffPerBlock.data(),
                         result->energyDiffPerBlock.size() * sizeof(uint32_t));
-        if (this->cfg.enableChroma)
+        if (this->cfg.enableEnergyChroma)
         {
             outputResult->averageU = result->averageU;
             outputResult->averageV = result->averageV;
@@ -197,7 +196,7 @@ vca_result Analyzer::pullResult(vca_frame_results *outputResult)
             std::memcpy(outputResult->entropyDiffPerBlock,
                         result->entropyDiffPerBlock.data(),
                         result->entropyDiffPerBlock.size() * sizeof(double));
-        if (this->cfg.enableChroma)
+        if (this->cfg.enableEntropyChroma)
         {
             outputResult->entropyU = result->entropyU;
             outputResult->entropyV = result->entropyV;
@@ -211,6 +210,14 @@ vca_result Analyzer::pullResult(vca_frame_results *outputResult)
                             result->entropyVPerBlock.size() * sizeof(double));
         }
 
+    }
+    if (this->cfg.enableEdgeDensity)
+    {
+        outputResult->averageEdgeDensity = result->averageEdgeDensity;
+        if (outputResult->edgeDensityPerBlock)
+            std::memcpy(outputResult->edgeDensityPerBlock,
+                        result->edgeDensityPerBlock.data(),
+                        result->edgeDensityPerBlock.size() * sizeof(double));
     }
 
     this->previousResult = result;

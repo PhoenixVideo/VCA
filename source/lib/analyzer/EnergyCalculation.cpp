@@ -461,6 +461,71 @@ void computeWeightedDCTEnergy(const Job &job,
     }
 }
 
+void computeEdgeDensity(const Job &job,
+                        Result &result,
+                        const unsigned blockSize,
+                        CpuSimd cpuSimd,
+                        bool enableLowpass)
+{
+    const auto frame = job.frame;
+    if (frame == nullptr)
+        throw std::invalid_argument("Invalid frame pointer");
+
+    const auto bitDepth      = frame->info.bitDepth;
+    const auto bytesPerPixel = (bitDepth > 8) ? 2 : 1;
+
+    auto src       = frame->planes[0];
+    auto srcStride = frame->stride[0];
+
+    auto [widthInBlocks, heightInBlock] = getFrameSizeInBlocks(blockSize, frame->info);
+    auto totalNumberBlocks              = widthInBlocks * heightInBlock;
+    auto widthInPixels                  = widthInBlocks * blockSize;
+    auto heightInPixels                 = heightInBlock * blockSize;
+
+        if (result.edgeDensityPerBlock.size() < totalNumberBlocks)
+        result.edgeDensityPerBlock.resize(totalNumberBlocks);
+
+    // First, we will copy the source to a temporary buffer which has one int16_t value
+    // per sample.
+    //   - This may only be needed for 8 bit values. For 16 bit values we could also
+    //     perform this directly from the source buffer. However, we should check the
+    //     performance of that approach (i.e. the buffer may not be aligned)
+
+    ALIGN_VAR_32(int16_t, pixelBuffer[32 * 32]);
+
+    auto blockIndex     = 0u;
+    double frameEdgeDensity = 0;
+    for (unsigned blockY = 0; blockY < heightInPixels; blockY += blockSize)
+    {
+        auto paddingBottom = std::max(int(blockY + blockSize) - int(frame->info.height), 0);
+        for (unsigned blockX = 0; blockX < widthInPixels; blockX += blockSize)
+        {
+            auto paddingRight = std::max(int(blockX + blockSize) - int(frame->info.width), 0);
+            auto blockOffsetLumaBytes = blockX * bytesPerPixel + (blockY * srcStride);
+
+            copyPixelValuesToBuffer(bitDepth,
+                                    blockOffsetLumaBytes,
+                                    blockSize,
+                                    src,
+                                    srcStride,
+                                    pixelBuffer,
+                                    unsigned(paddingRight),
+                                    unsigned(paddingBottom));
+
+            result.edgeDensityPerBlock[blockIndex] = performEdgeDensity(blockSize,
+                                                                        bitDepth,
+                                                                        pixelBuffer,
+                                                                        cpuSimd,
+                                                                        enableLowpass);
+            frameEdgeDensity += result.edgeDensityPerBlock[blockIndex];
+            blockIndex++;
+        }
+    }
+
+    result.averageEdgeDensity = frameEdgeDensity / totalNumberBlocks;
+
+}
+
 void computeEntropy(const Job &job,
                     Result &result,
                     const unsigned blockSize,
@@ -653,6 +718,27 @@ void computeEntropySAD(Result &result, const Result &resultsPreviousFrame)
     }
 
     result.entropyDiff = entropyDiff / totalNumberBlocks;
+}
+
+void computeTextureEpsilon(Result& result, const Result& resultsPreviousFrame)
+{
+    if (result.energyDiffPerBlock.size() != resultsPreviousFrame.energyDiffPerBlock.size())
+        throw std::out_of_range("Size of energyDiff result vector must match");
+
+    auto totalNumberBlocks = result.energyDiffPerBlock.size();
+    if (result.energyEpsilonPerBlock.size() < totalNumberBlocks)
+        result.energyEpsilonPerBlock.resize(totalNumberBlocks);
+
+    double textureEpsilon = 0.0;
+    for (size_t i = 0; i < totalNumberBlocks; i++)
+    {
+        result.energyEpsilonPerBlock[i] = uint32_t(std::abs(int(result.energyDiffPerBlock[i])
+                                                           - int(resultsPreviousFrame.energyDiffPerBlock[i])));
+        textureEpsilon += result.energyEpsilonPerBlock[i];
+    }
+
+    result.energyEpsilon = textureEpsilon / (totalNumberBlocks * h_norm_factor);
+
 }
 
 } // namespace vca

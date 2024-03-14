@@ -38,7 +38,7 @@ const auto CpuSimdMapper = EnumMapper<CpuSimd>({{CpuSimd::None, "NoSimd"},
                                                 {CpuSimd::SSE2, "SSE2"},
                                                 {CpuSimd::SSSE3, "SSSE3"},
                                                 {CpuSimd::SSE4, "SSE4"},
-                                                {CpuSimd::AVX2, "AVX"}});
+                                                {CpuSimd::AVX2, "AVX2"}});
 
 inline void log(const vca_param &cfg, LogLevel level, const std::string &message)
 {
@@ -90,6 +90,7 @@ struct Result
     std::vector<uint32_t> brightnessPerBlock;
     std::vector<uint32_t> energyPerBlock;
     std::vector<uint32_t> energyDiffPerBlock;
+    std::vector<int32_t> energyEpsilonPerBlock;
     std::vector<uint32_t> averageUPerBlock;
     std::vector<uint32_t> averageVPerBlock;
     std::vector<uint32_t> energyUPerBlock;
@@ -101,7 +102,7 @@ struct Result
     uint32_t energyU{};
     uint32_t energyV{};
     double energyDiff{};
-    double epsilon{};
+    double energyEpsilon{};
 
     std::vector<double> entropyPerBlock;
     std::vector<double> entropyDiffPerBlock;
@@ -112,6 +113,9 @@ struct Result
     double entropyV{};
     double entropyDiff{};
     double entropyEpsilon{};
+
+    std::vector<double> edgeDensityPerBlock;
+    double averageEdgeDensity{};
 
     int poc{};
     unsigned jobID{};

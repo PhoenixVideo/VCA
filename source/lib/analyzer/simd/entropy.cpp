@@ -19,16 +19,36 @@
  * along with this program.
  *****************************************************************************/
 
+#ifdef WIN32
 #include <immintrin.h> // Include SIMD intrinsics header for x86 architecture
 #include <cmath>
 #include <vector>
 #include <unordered_map>
 
-// x86 SIMD optimized entropy function
-
+// x86 AVX2 SIMD optimized entropy function
 double entropy_avx2(const std::vector<int16_t> &block)
 {
-    //TODO
-    double entropy = 0.0;
-    return entropy;
+    std::unordered_map<int, int> pixelCounts;
+    int totalPixels = static_cast<int>(block.size());
+
+    // Count occurrences of each pixel value
+    for (int pixel : block)
+    {
+        pixelCounts[pixel]++;
+    }
+
+    // Calculate entropy
+    __m256d entropyVec = _mm256_setzero_pd();
+    for (const auto &pair : pixelCounts)
+    {
+        double probability = static_cast<double>(pair.second) / totalPixels;
+        __m256d probVec    = _mm256_set1_pd(probability);
+        entropyVec = _mm256_sub_pd(entropyVec, _mm256_mul_pd(probVec, _mm256_log2_pd(probVec)));
+    }
+
+    alignas(32) double entropyArr[4];
+    _mm256_store_pd(entropyArr, entropyVec);
+
+    return entropyArr[0] + entropyArr[1] + entropyArr[2] + entropyArr[3];
 }
+#endif
